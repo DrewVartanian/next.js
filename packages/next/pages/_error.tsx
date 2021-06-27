@@ -12,6 +12,7 @@ const statusCodes: { [code: number]: string } = {
 export type ErrorProps = {
   statusCode: number
   title?: string
+  styles?: { [key in keyof typeof styles]?: React.CSSProperties }
 }
 
 function _getInitialProps({
@@ -34,13 +35,29 @@ export default class Error<P = {}> extends React.Component<P & ErrorProps> {
 
   render() {
     const { statusCode } = this.props
+
     const title =
       this.props.title ||
       statusCodes[statusCode] ||
       'An unexpected error has occurred'
 
+    const instanceStyles = { ...styles }
+    const propStyles = this.props.styles
+    if (propStyles) {
+      for (const element of Object.keys(instanceStyles) as Array<
+        keyof typeof instanceStyles
+      >) {
+        if (element in propStyles) {
+          instanceStyles[element] = {
+            ...instanceStyles[element],
+            ...propStyles[element],
+          }
+        }
+      }
+    }
+
     return (
-      <div style={styles.error}>
+      <div style={instanceStyles.error}>
         <Head>
           <title>
             {statusCode
@@ -50,9 +67,9 @@ export default class Error<P = {}> extends React.Component<P & ErrorProps> {
         </Head>
         <div>
           <style dangerouslySetInnerHTML={{ __html: 'body { margin: 0 }' }} />
-          {statusCode ? <h1 style={styles.h1}>{statusCode}</h1> : null}
-          <div style={styles.desc}>
-            <h2 style={styles.h2}>
+          {statusCode ? <h1 style={instanceStyles.h1}>{statusCode}</h1> : null}
+          <div style={instanceStyles.desc}>
+            <h2 style={instanceStyles.h2}>
               {this.props.title || statusCode ? (
                 title
               ) : (
@@ -73,7 +90,7 @@ export default class Error<P = {}> extends React.Component<P & ErrorProps> {
   }
 }
 
-const styles: { [k: string]: React.CSSProperties } = {
+const styles: { [k in 'error' | 'desc' | 'h1' | 'h2']: React.CSSProperties } = {
   error: {
     color: '#000',
     background: '#fff',
